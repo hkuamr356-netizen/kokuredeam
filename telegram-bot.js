@@ -1,6 +1,6 @@
 /**
  * Telegram Admin Bot – Full Key Manager
- * Now exportable to run inside the main server process.
+ * Exportable to run inside the main server process.
  */
 
 const TelegramBot = require('node-telegram-bot-api');
@@ -13,26 +13,15 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8750220524:AAEvziGps37QhEns
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6508116854';
 const ADMIN_MASTER_KEY = process.env.ADMIN_MASTER_KEY || 'admin123';
 
-// MAIN_SERVER will be set by server.js
-let MAIN_SERVER = process.env.MAIN_SERVER || '';
-
-// ============================================================
-//  BOT INSTANCE
-// ============================================================
-let bot = null;
+let MAIN_SERVER = '';
 
 function startBot(serverUrl) {
-  if (bot) {
-    console.log('🤖 Bot already running.');
-    return;
-  }
-
   // If serverUrl provided, use it; otherwise fallback to env or localhost
-  MAIN_SERVER = serverUrl || process.env.MAIN_SERVER || `http://localhost:${process.env.PORT || 5000}`;
+  MAIN_SERVER = serverUrl || process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 5000}`;
 
   // Handle both default and named exports
   const Bot = TelegramBot.default || TelegramBot;
-  bot = new Bot(BOT_TOKEN, { polling: true });
+  const bot = new Bot(BOT_TOKEN, { polling: true });
 
   // Helper: send message
   function sendMessage(chatId, text, options = {}) {
@@ -275,5 +264,4 @@ Expires: ${expires}
   console.log(`📡 Bot will call APIs at: ${MAIN_SERVER}`);
 }
 
-// Export the start function
 module.exports = { startBot };
