@@ -1,6 +1,6 @@
 /**
- * Yarwin Redeem Pro - Server (v4.0)
- * Features: Yaarwin APIs, key‑based login, bot endpoints, Telegram credential storage, allocation.
+ * Yarwin Redeem Pro - Server (v4.0) with integrated Telegram bot
+ * Features: Yaarwin APIs, key‑based login, bot endpoints, allocation, admin dashboard with key generation.
  */
 
 const express = require('express');
@@ -467,7 +467,7 @@ app.get('/api/bot-logs', (req, res) => {
 });
 
 // ============================================================
-// ===== Admin Dashboard =====
+// ===== Admin Dashboard (with key generation form) =====
 // ============================================================
 app.get('/admin', (req, res) => {
   const { key } = req.query;
@@ -485,11 +485,62 @@ app.get('/admin', (req, res) => {
   }
   res.send(`
     <html>
-      <head><title>Admin Panel</title><style>body{background:#1a1a2e;color:#eee;font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #444;padding:8px;text-align:left;}th{background:#333;}button{background:#d32f2f;color:#fff;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;}button:hover{background:#b71c1c;}</style></head>
+      <head>
+        <title>Admin Panel</title>
+        <style>
+          body{background:#1a1a2e;color:#eee;font-family:sans-serif;padding:20px;}
+          table{width:100%;border-collapse:collapse;margin-top:20px;}
+          th,td{border:1px solid #444;padding:8px;text-align:left;}
+          th{background:#333;}
+          button{background:#4CAF50;color:#fff;border:none;padding:8px 16px;cursor:pointer;border-radius:4px;}
+          button:hover{background:#45a049;}
+          .key-gen{background:#2d2d44;padding:20px;border-radius:8px;margin-bottom:20px;}
+          .key-gen input{padding:8px;border-radius:4px;border:1px solid #555;background:#222;color:#fff;margin-right:8px;}
+          .del-btn{background:#d32f2f;}
+          .del-btn:hover{background:#b71c1c;}
+        </style>
+      </head>
       <body>
-        <h1>👥 Users</h1>
+        <h1>👑 Admin Panel</h1>
+
+        <div class="key-gen">
+          <h2>🔑 Generate New Key</h2>
+          <form id="keyForm">
+            <input type="text" id="durationInput" placeholder="e.g., 30D, 2H (leave empty for unlimited)" style="width:250px;" />
+            <button type="submit">Generate Key</button>
+          </form>
+          <div id="keyResult" style="margin-top:10px;color:#69F0AE;font-weight:bold;"></div>
+        </div>
+
+        <h2>👥 Users</h2>
         <div id="users"></div>
+
         <script>
+          document.getElementById('keyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const duration = document.getElementById('durationInput').value.trim();
+            const resultDiv = document.getElementById('keyResult');
+            resultDiv.textContent = '⏳ Generating...';
+            try {
+              const res = await fetch('/api/admin/newkey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ masterKey: '${ADMIN_MASTER_KEY}', duration })
+              });
+              const data = await res.json();
+              if (data.key) {
+                const expires = data.expiresAt ? new Date(data.expiresAt).toLocaleString() : 'Unlimited';
+                resultDiv.innerHTML = '✅ <b>Key:</b> <code style="background:#333;padding:4px 8px;border-radius:4px;">' + data.key + '</code> <b>Expires:</b> ' + expires;
+              } else {
+                resultDiv.textContent = '❌ ' + (data.error || 'Failed to generate key');
+                resultDiv.style.color = '#FF5252';
+              }
+            } catch(err) {
+              resultDiv.textContent = '❌ Error: ' + err.message;
+              resultDiv.style.color = '#FF5252';
+            }
+          });
+
           async function loadUsers() {
             const res = await fetch('/api/admin/users?masterKey=${ADMIN_MASTER_KEY}');
             const users = await res.json();
@@ -503,17 +554,19 @@ app.get('/admin', (req, res) => {
                 <td>\${u.lastLogin}</td>
                 <td>\${u.accountsCount}</td>
                 <td>\${expiry}</td>
-                <td><button onclick="deleteUser('\${u.key}')">Delete</button></td>
+                <td><button class="del-btn" onclick="deleteUser('\${u.key}')">Delete</button></td>
               </tr>\`;
             });
             html += '</table>';
             document.getElementById('users').innerHTML = html;
           }
+
           async function deleteUser(key) {
             if(!confirm('Delete user '+key+'?')) return;
             await fetch('/api/admin/user?masterKey=${ADMIN_MASTER_KEY}&key='+key, {method:'DELETE'});
             loadUsers();
           }
+
           loadUsers();
         </script>
       </body>
@@ -528,7 +581,21 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
+// ============================================================
+// ===== Start the integrated Telegram bot =====
+// ============================================================
+const server = app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🔑 Admin dashboard: /admin?key=${ADMIN_MASTER_KEY}`);
 });
+
+// Start the Telegram bot inside the same process
+try {
+  const { startBot } = require('./telegram-bot.js');
+  // Use PUBLIC_URL if set, otherwise fallback to localhost
+  const publicUrl = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
+  startBot(publicUrl);
+  console.log('✅ Telegram bot started successfully.');
+} catch (err) {
+  console.warn('⚠️ Telegram bot not started:', err.message);
+}
