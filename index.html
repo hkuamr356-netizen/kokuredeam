@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Auto Gift Code Claimer – Yaarwin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; width:100%; font-family:'Inter',sans-serif; background:radial-gradient(circle at 10% 20%, #0d0d2b, #1a0b2e); display:flex; justify-content:center; align-items:center; padding:12px; position:relative; overflow:hidden; }
+    .particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:0; }
+    .particle { position:absolute; width:4px; height:4px; background:rgba(255,215,0,0.3); border-radius:50%; animation:float 8s infinite alternate ease-in-out; }
+    @keyframes float { 0%{transform:translateY(0) translateX(0) scale(1); opacity:0.2;} 100%{transform:translateY(-100px) translateX(30px) scale(1.5); opacity:0.8;} }
+    .panel { width:94%; max-width:800px; height:94vh; max-height:820px; background:rgba(26,26,46,0.78); backdrop-filter:blur(14px); border-radius:32px; padding:20px 24px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(139,0,139,0.2); position:relative; z-index:1; display:flex; flex-direction:column; overflow:hidden; }
+    .header { display:flex; justify-content:space-between; align-items:center; flex-shrink:0; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+    .header .title { font-weight:800; font-size:clamp(18px,3.2vw,26px); background:linear-gradient(135deg,#FFD700,#FF6B00); -webkit-background-clip:text; -webkit-text-fill-color:transparent; white-space:nowrap; }
+    .header .hamburger { color:#aaa; font-size:28px; cursor:pointer; padding:4px 8px; border-radius:8px; transition:0.2s; }
+    .header .hamburger:hover { color:#fff; background:rgba(255,255,255,0.05); }
+    .timer-display { font-family:'JetBrains Mono',monospace; font-size:clamp(14px,1.8vw,20px); color:#FFD700; background:rgba(0,0,0,0.4); padding:4px 12px; border-radius:10px; border:1px solid rgba(255,215,0,0.2); }
+    .game-tab { background:linear-gradient(135deg,#E53935,#c62828); border-radius:14px; padding:12px 0; text-align:center; font-weight:800; font-size:clamp(16px,2.4vw,20px); letter-spacing:2px; color:#fff; text-shadow:0 2px 8px rgba(229,57,53,0.4); flex-shrink:0; margin-bottom:12px; box-shadow:0 4px 20px rgba(229,57,53,0.25); }
+    .code-area { background:rgba(0,0,0,0.4); border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; border:1px solid rgba(255,215,0,0.15); min-height:64px; margin-bottom:12px; }
+    .code-text { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(16px,2.2vw,22px); color:#FFD700; word-break:break-all; max-height:80px; overflow-y:auto; flex:1; padding-right:12px; text-shadow:0 0 10px rgba(255,215,0,0.1); }
+    .code-text.invalid { text-decoration:underline; text-decoration-color:#ff5252; }
+    .clear-btn { width:36px; height:36px; background:rgba(229,57,53,0.8); border:none; border-radius:10px; color:#fff; font-size:18px; font-weight:700; cursor:pointer; transition:0.2s; flex-shrink:0; }
+    .clear-btn:hover { background:#E53935; transform:scale(1.05); }
+    .row { display:flex; gap:8px; flex-shrink:0; margin-bottom:10px; flex-wrap:wrap; }
+    .btn { flex:1; padding:10px 0; border:none; border-radius:12px; font-family:'Inter',sans-serif; font-weight:700; font-size:clamp(12px,1.6vw,15px); cursor:pointer; transition:all 0.15s ease; text-align:center; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.05); min-width:60px; }
+    .btn:hover { transform:scale(0.97); }
+    .btn:active { transform:scale(0.93); }
+    .btn:disabled { opacity:0.4; pointer-events:none; }
+    .btn-auto-off { background:#37474f; color:#ccc; }
+    .btn-auto-on { background:#4CAF50; color:#000; box-shadow:0 0 20px rgba(76,175,80,0.3); }
+    .btn-paste { background:#424242; color:#fff; }
+    .btn-fire { background:linear-gradient(135deg,#FF6F00,#E53935); color:#fff; font-weight:800; box-shadow:0 4px 20px rgba(229,57,53,0.3); }
+    .btn-fire.loading { opacity:0.6; pointer-events:none; }
+    .btn-fire.loading::after { content:" ⏳"; }
+    .btn-login-all { background:#1976D2; color:#fff; }
+    .btn-refresh-all { background:#00BCD4; color:#000; }
+    .btn-gift-page { background:#7B1FA2; color:#fff; }
+    .btn-account-page { background:#F57C00; color:#000; }
+    .btn-manage-ids { background:#4CAF50; color:#000; flex:3; }
+    .log-area { background:rgba(0,0,0,0.4); border-radius:12px; padding:10px 14px; flex:1; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:clamp(11px,1.2vw,13px); color:#aaa; border:1px solid rgba(255,255,255,0.05); margin-top:6px; min-height:80px; }
+    .log-area .log-entry { padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03); display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+    .log-area .log-entry .time { color:#666; flex-shrink:0; }
+    .log-area .log-entry .account { color:#888; font-size:0.9em; }
+    .log-area .log-entry .msg { color:#ddd; word-break:break-all; }
+    .log-area .log-entry .success { color:#69F0AE; }
+    .log-area .log-entry .error { color:#FF5252; }
+    .log-area .log-entry .info { color:#42A5F5; }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.9); backdrop-filter:blur(8px); padding:12px 24px; border-radius:14px; color:#fff; font-size:15px; font-weight:500; z-index:9999; opacity:0; transition:opacity 0.3s; pointer-events:none; border:1px solid rgba(255,255,255,0.1); max-width:90%; text-align:center; }
+    .toast.show { opacity:1; }
+
+    .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:none; justify-content:center; align-items:center; z-index:10000; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#1e1e32; border-radius:24px; padding:24px; width:92%; max-width:520px; max-height:80vh; overflow-y:auto; border:1px solid rgba(255,255,255,0.06); box-shadow:0 20px 60px rgba(0,0,0,0.8); color:#fff; }
+    .modal h2 { font-size:22px; font-weight:700; margin-bottom:14px; border-bottom:2px solid rgba(229,57,53,0.4); padding-bottom:10px; }
+    .modal h3 { font-size:17px; font-weight:600; margin:14px 0 10px 0; color:#FFD700; }
+    .modal .field { margin-bottom:12px; }
+    .modal label { display:block; font-size:13px; color:#aaa; margin-bottom:4px; }
+    .modal input, .modal textarea { width:100%; padding:10px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; font-size:15px; font-family:inherit; }
+    .modal input:focus, .modal textarea:focus { outline:none; border-color:#E53935; }
+    .modal input[type="number"] { width:120px; display:inline-block; }
+    .modal .setting-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
+    .modal .setting-row label { min-width:120px; margin-bottom:0; }
+    .modal .setting-row input { flex:1; min-width:80px; max-width:150px; }
+    .modal .setting-row .unit { color:#888; font-size:13px; }
+    .modal .settings-nav { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .modal .settings-nav button { flex:1; padding:10px 8px; border:none; border-radius:10px; font-weight:700; cursor:pointer; background:rgba(255,255,255,0.06); color:#aaa; transition:0.2s; min-width:80px; }
+    .modal .settings-nav button.active { background:#E53935; color:#fff; box-shadow:0 0 20px rgba(229,57,53,0.3); }
+    .modal .settings-nav button:hover { background:rgba(255,255,255,0.1); }
+    .modal .settings-section { display:none; padding-top:8px; }
+    .modal .settings-section.active { display:block; }
+    .modal .account-list, .modal .group-list, .modal .channel-list { max-height:200px; overflow-y:auto; margin:12px 0; background:rgba(0,0,0,0.2); border-radius:10px; padding:6px; }
+    .modal .group-item, .modal .channel-item { display:flex; justify-content:space-between; align-items:center; padding:8px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .modal .group-item:last-child, .modal .channel-item:last-child { border-bottom:none; }
+    .modal .group-item .info, .modal .channel-item .info { flex:1; }
+    .modal .group-item .info .name, .modal .channel-item .info .name { font-weight:600; font-size:15px; }
+    .modal .group-item .info .detail, .modal .channel-item .info .detail { font-size:12px; color:#aaa; }
+    .modal .group-item .actions button, .modal .channel-item .actions button { background:none; border:none; color:#fff; cursor:pointer; margin-left:4px; padding:4px 8px; border-radius:6px; font-size:13px; transition:0.2s; }
+    .modal .group-item .actions .load-btn { background:#4CAF50; color:#000; }
+    .modal .group-item .actions .delete-btn, .modal .channel-item .actions .delete-btn { color:#ff5252; }
+    .modal .account-actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+    .modal .account-actions button { flex:1; padding:10px; border:none; border-radius:10px; font-weight:700; cursor:pointer; min-width:70px; }
+    .modal .close-modal { background:#616161; color:#fff; }
+    .modal .save-account { background:#4CAF50; color:#000; }
+    .modal .test-login-btn { background:#1976D2; color:#fff; }
+    .modal .bulk-import-btn { background:#FF9800; color:#000; width:100%; padding:8px 0; font-size:13px; border-radius:10px; border:none; font-weight:700; cursor:pointer; transition:0.2s; text-align:center; }
+    .modal .bulk-import-btn:hover { transform:scale(0.97); }
+    .modal .bulk-import-btn:active { transform:scale(0.93); }
+    .modal .account-counter, .modal .group-counter, .modal .channel-counter { font-size:14px; color:#aaa; margin-bottom:6px; }
+    .modal .clear-all-btn { background:#d32f2f; color:#fff; width:100%; padding:8px 0; font-size:13px; border-radius:10px; border:none; font-weight:700; cursor:pointer; transition:0.2s; text-align:center; margin-top:6px; }
+    .modal .clear-all-btn:hover { transform:scale(0.97); background:#b71c1c; }
+    .modal .clear-all-btn:active { transform:scale(0.93); }
+    .modal .save-settings-btn { background:#4CAF50; color:#000; width:100%; padding:10px; border:none; border-radius:10px; font-weight:700; cursor:pointer; transition:0.2s; margin-top:12px; }
+    .modal .save-settings-btn:hover { transform:scale(0.97); }
+
+    #loginOverlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.92);
+      backdrop-filter:blur(8px);
+      z-index:99999;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      color:#fff;
+      font-family:'Inter',sans-serif;
+    }
+    #loginOverlay .login-box {
+      background:#1e1e32;
+      padding:40px 30px;
+      border-radius:24px;
+      max-width:400px;
+      width:90%;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 20px 60px rgba(0,0,0,0.8);
+    }
+    #loginOverlay h2 { font-size:24px; margin-bottom:8px; }
+    #loginOverlay p { color:#aaa; font-size:14px; margin-bottom:20px; }
+    #loginOverlay input { width:100%; padding:12px; border-radius:10px; border:1px solid #555; background:#2a2a3a; color:#fff; font-size:16px; margin-bottom:16px; }
+    #loginOverlay input:focus { outline:none; border-color:#E53935; }
+    #loginOverlay button { width:100%; padding:12px; background:#E53935; border:none; border-radius:10px; font-weight:700; color:#fff; font-size:16px; cursor:pointer; transition:0.2s; }
+    #loginOverlay button:hover { transform:scale(0.97); }
+    #loginError { color:#ff5252; margin-top:12px; font-size:14px; }
+
+    @media (max-width:500px) { .panel { padding:14px; } .header .title { font-size:18px; } .btn { font-size:12px; padding:8px 0; } .row { gap:6px; } .modal .setting-row { flex-direction:column; align-items:stretch; } .modal .setting-row label { min-width:auto; } .modal .setting-row input { max-width:100%; } }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>🔐 Enter Key</h2>
+    <p>Enter the key provided by the admin.</p>
+    <input type="text" id="loginKeyInput" placeholder="e.g., ABC123" />
+    <button id="loginBtn">Login</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- MAIN PANEL -->
+<div class="panel" id="appPanel" style="display:none;">
+  <div class="header">
+    <span class="hamburger" id="hamburgerBtn">☰</span>
+    <span class="title">Auto Gift Code Claimer</span>
+    <span class="timer-display" id="timerDisplay">⏳ --:--:--</span>
+  </div>
+
+  <div class="game-tab">YAARWIN</div>
+
+  <div class="code-area">
+    <div class="code-text" id="codeDisplay">Paste a code or use PASTE</div>
+    <button class="clear-btn" id="clearCodeBtn">✕</button>
+  </div>
+
+  <div class="row">
+    <button class="btn btn-auto-off" id="autoToggleBtn">AUTO: OFF</button>
+    <button class="btn btn-paste" id="pasteBtn">PASTE</button>
+    <button class="btn btn-fire" id="fireBtn">Fire 🔥</button>
+  </div>
+
+  <div class="row">
+    <button class="btn btn-login-all" id="loginAllBtn">Login All</button>
+    <button class="btn btn-refresh-all" id="refreshAllBtn">Refresh All</button>
+    <button class="btn btn-gift-page" id="giftPageBtn">Gift Page</button>
+    <button class="btn btn-account-page" id="accountPageBtn">Account Page</button>
+  </div>
+
+  <div class="row">
+    <button class="btn btn-manage-ids" id="manageIdsBtn">Manage IDs / Bulk Import</button>
+  </div>
+
+  <div class="log-area" id="logArea">
+    <div style="color:#888; font-size:11px;">— Logs —</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toastContainer"></div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal">
+    <h2>⚙️ Settings</h2>
+    <div class="settings-nav">
+      <button class="active" data-section="login">🔐 Login Logic</button>
+      <button data-section="redeem">🚀 Redeem Logic</button>
+      <button data-section="telegram">📱 Telegram Monitoring</button>
+      <button data-section="allocation">📊 Bot Allocation</button>
+    </div>
+
+    <!-- Login Logic -->
+    <div class="settings-section active" id="section-login">
+      <div class="setting-row"><label>Login Delay</label><input type="number" id="loginDelay" min="100" max="5000" step="100" /><span class="unit">ms</span></div>
+      <div class="setting-row"><label>Retry Delay</label><input type="number" id="retryDelay" min="200" max="10000" step="100" /><span class="unit">ms</span></div>
+      <div class="setting-row"><label>Max Retries</label><input type="number" id="maxRetries" min="1" max="10" step="1" /><span class="unit">attempts</span></div>
+      <div class="setting-row"><label>Delay Between Accounts</label><input type="number" id="delayBetweenAccounts" min="0" max="3000" step="100" /><span class="unit">ms</span></div>
+      <div class="setting-row"><label>Default Password for Load</label><input type="text" id="defaultPassword" placeholder="e.g., password123" /><span class="unit">(if no password in group)</span></div>
+    </div>
+
+    <!-- Redeem Logic -->
+    <div class="settings-section" id="section-redeem">
+      <div class="setting-row"><label>Throttle Speed</label><input type="number" id="redeemDelay" min="0" max="2000" step="50" /><span class="unit">ms (between accounts)</span></div>
+      <div class="setting-row"><label>Stop on Critical Error</label><select id="stopOnError" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px 12px; color:#fff; font-size:15px; flex:1;"><option value="true">✅ Yes – stop on expired/used</option><option value="false">❌ No – continue to next account</option></select></div>
+    </div>
+
+    <!-- Telegram Monitoring (Coming Soon) -->
+    <div class="settings-section" id="section-telegram">
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:16px;">📱</div>
+        <h3 style="font-size:20px; font-weight:700; color:#FFD700; margin-bottom:8px;">Coming Soon</h3>
+        <p style="color:#aaa; font-size:14px; max-width:300px;">Telegram monitoring feature is under development. Stay tuned!</p>
+      </div>
+    </div>
+
+    <!-- Bot Allocation -->
+    <div class="settings-section" id="section-allocation">
+      <h3 style="font-size:16px; margin-bottom:8px;">📊 Account Allocation per Channel</h3>
+      <p style="color:#aaa; font-size:13px; margin-bottom:12px;">
+        Assign account index ranges (0‑based) to each monitored channel.
+        The bot will use only these accounts when redeeming codes from that channel.
+      </p>
+      <div id="allocationList"></div>
+      <button class="btn save-account" id="saveAllocationBtn" style="background:#4CAF50; color:#000; margin-top:12px;">💾 Save Allocations</button>
+      <div id="allocationStatus" style="margin-top:8px; color:#aaa; font-size:13px;"></div>
+    </div>
+
+    <button class="save-settings-btn" id="saveSettingsBtn">💾 Save All Settings</button>
+    <div class="account-actions" style="margin-top:12px;"><button class="btn close-modal" id="closeSettingsBtn">Close</button></div>
+  </div>
+</div>
+
+<!-- ===== MANAGE IDs ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>Manage IDs</h2>
+    <div class="account-counter" id="accountCounter">0 Accounts</div>
+    <div class="account-list" id="accountList"></div>
+    <button class="clear-all-btn" id="clearAllBtn">🗑️ Clear All Accounts</button>
+    <div class="field" style="margin-top:12px;">
+      <label>Bulk Import (one per line: phone|password)</label>
+      <textarea id="bulkImportArea" rows="3" placeholder="9876543210|pass123&#10;9123456789|pass456"></textarea>
+    </div>
+    <button class="bulk-import-btn" id="bulkImportBtn">Import Bulk</button>
+    <div class="account-actions" style="margin-top:16px;"><button class="btn close-modal" id="closeModalBtn">Close</button></div>
+    <div id="modalStatus" style="margin-top:8px; font-size:14px; color:#aaa;"></div>
+  </div>
+</div>
+
+<!-- ===== ACCOUNT PAGE (Groups) ===== -->
+<div class="modal-overlay" id="accountModalOverlay">
+  <div class="modal">
+    <h2>Account Groups</h2>
+    <div class="group-counter" id="groupCounter">0 Groups</div>
+    <div class="group-list" id="groupList"></div>
+    <div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.1); padding-top:14px;">
+      <button class="btn save-account" id="addGroupBtn" style="background:#FF9800; color:#000;">➕ Add New Group</button>
+    </div>
+    <div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.1); padding-top:14px; display:none;" id="groupFormArea">
+      <h3 style="font-size:16px; margin-bottom:10px;">New Group</h3>
+      <div class="field"><label>Group Name</label><input type="text" id="groupNameInput" placeholder="e.g., Rohan, Team A" /></div>
+      <div class="field"><label>Numbers &amp; Passwords (one per line: number|password)</label><textarea id="groupNumbersInput" rows="5" placeholder="9876543210|pass123&#10;9123456789|pass456&#10;9988776655 (uses default password)"></textarea><span style="color:#888; font-size:12px;">If no password is given, the default password from Settings will be used.</span></div>
+      <button class="btn save-account" id="saveGroupBtn">Save Group</button>
+      <button class="btn close-modal" id="cancelGroupBtn" style="background:#616161;">Cancel</button>
+    </div>
+    <div class="account-actions" style="margin-top:16px;"><button class="btn close-modal" id="closeAccountModalBtn">Close</button></div>
+  </div>
+</div>
+
+<!-- ===== GIFT PAGE (History) ===== -->
+<div class="modal-overlay" id="historyOverlay">
+  <div class="modal">
+    <h2>Redemption History</h2>
+    <div id="historyList" style="max-height:280px; overflow-y:auto;"></div>
+    <div class="account-actions" style="margin-top:16px;"><button class="btn close-modal" id="closeHistoryBtn">Close</button></div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    'use strict';
+
+    // ===== DOM REFS =====
+    const codeDisplay = document.getElementById('codeDisplay');
+    const clearCodeBtn = document.getElementById('clearCodeBtn');
+    const toastContainer = document.getElementById('toastContainer');
+    const logArea = document.getElementById('logArea');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    const autoToggleBtn = document.getElementById('autoToggleBtn');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const fireBtn = document.getElementById('fireBtn');
+    const loginAllBtn = document.getElementById('loginAllBtn');
+    const refreshAllBtn = document.getElementById('refreshAllBtn');
+    const giftPageBtn = document.getElementById('giftPageBtn');
+    const accountPageBtn = document.getElementById('accountPageBtn');
+    const manageIdsBtn = document.getElementById('manageIdsBtn');
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const loginDelayInput = document.getElementById('loginDelay');
+    const retryDelayInput = document.getElementById('retryDelay');
+    const maxRetriesInput = document.getElementById('maxRetries');
+    const delayBetweenAccountsInput = document.getElementById('delayBetweenAccounts');
+    const redeemDelayInput = document.getElementById('redeemDelay');
+    const stopOnErrorSelect = document.getElementById('stopOnError');
+    const defaultPasswordInput = document.getElementById('defaultPassword');
+
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const settingsNavBtns = document.querySelectorAll('.settings-nav button');
+    const settingsSections = {
+      login: document.getElementById('section-login'),
+      redeem: document.getElementById('section-redeem'),
+      telegram: document.getElementById('section-telegram'),
+      allocation: document.getElementById('section-allocation')
+    };
+    const saveAllocationBtn = document.getElementById('saveAllocationBtn');
+    const allocationStatus = document.getElementById('allocationStatus');
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const accountList = document.getElementById('accountList');
+    const accountCounter = document.getElementById('accountCounter');
+    const bulkImportArea = document.getElementById('bulkImportArea');
+    const bulkImportBtn = document.getElementById('bulkImportBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalStatus = document.getElementById('modalStatus');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    const accountModalOverlay = document.getElementById('accountModalOverlay');
+    const groupList = document.getElementById('groupList');
+    const groupCounter = document.getElementById('groupCounter');
+    const addGroupBtn = document.getElementById('addGroupBtn');
+    const groupFormArea = document.getElementById('groupFormArea');
+    const groupNameInput = document.getElementById('groupNameInput');
+    const groupNumbersInput = document.getElementById('groupNumbersInput');
+    const saveGroupBtn = document.getElementById('saveGroupBtn');
+    const cancelGroupBtn = document.getElementById('cancelGroupBtn');
+    const closeAccountModalBtn = document.getElementById('closeAccountModalBtn');
+
+    const historyOverlay = document.getElementById('historyOverlay');
+    const historyList = document.getElementById('historyList');
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginKeyInput = document.getElementById('loginKeyInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const appPanel = document.getElementById('appPanel');
+
+    // ============================================================
+    //  LOGIN + TIMER
+    // ============================================================
+    let expiryTimestamp = null;
+    let timerInterval = null;
+
+    function startTimer(expiryMs) {
+      expiryTimestamp = expiryMs;
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const now = Date.now();
+        const diff = expiryTimestamp - now;
+        if (diff <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          timerDisplay.textContent = '⏳ EXPIRED';
+          forceLogout();
+          return;
+        }
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        timerDisplay.textContent = `⏳ ${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+      }, 1000);
+    }
+
+    function forceLogout() {
+      localStorage.removeItem('yaarwin_key');
+      localStorage.removeItem('yaarwin_expiry');
+      if (timerInterval) clearInterval(timerInterval);
+      loginOverlay.style.display = 'flex';
+      appPanel.style.display = 'none';
+      showToast('🔑 Your key has been revoked or expired.');
+      if (window._keyCheckInterval) {
+        clearInterval(window._keyCheckInterval);
+        window._keyCheckInterval = null;
+      }
+    }
+
+    loginBtn.addEventListener('click', async () => {
+      const key = loginKeyInput.value.trim();
+      if (!key) { loginError.textContent = 'Please enter a key'; return; }
+      const fingerprint = navigator.userAgent + '|' + screen.width + 'x' + screen.height;
+      try {
+        const res = await fetch('/api/login-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, fingerprint })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('yaarwin_key', key);
+          localStorage.setItem('yaarwin_expiry', data.expiresAt);
+          if (data.accounts && data.accounts.length > 0) {
+            accounts = data.accounts;
+            saveAccounts();
+          }
+          loginOverlay.style.display = 'none';
+          appPanel.style.display = 'flex';
+          showToast('✅ Logged in successfully');
+          if (data.expiresAt) startTimer(parseInt(data.expiresAt));
+          else timerDisplay.textContent = '⏳ Unlimited';
+          startKeyValidation();
+        } else {
+          loginError.textContent = data.error || 'Invalid key';
+        }
+      } catch(e) {
+        loginError.textContent = 'Network error';
+      }
+    });
+
+    const savedKey = localStorage.getItem('yaarwin_key');
+    const savedExpiry = localStorage.getItem('yaarwin_expiry');
+    if (savedKey && savedExpiry) {
+      const expiryMs = parseInt(savedExpiry);
+      if (expiryMs > Date.now()) {
+        loginOverlay.style.display = 'none';
+        appPanel.style.display = 'flex';
+        startTimer(expiryMs);
+        startKeyValidation();
+      } else {
+        localStorage.removeItem('yaarwin_key');
+        localStorage.removeItem('yaarwin_expiry');
+        loginOverlay.style.display = 'flex';
+        appPanel.style.display = 'none';
+      }
+    } else if (savedKey) {
+      loginOverlay.style.display = 'none';
+      appPanel.style.display = 'flex';
+      timerDisplay.textContent = '⏳ Unlimited';
+      startKeyValidation();
+    } else {
+      loginOverlay.style.display = 'flex';
+      appPanel.style.display = 'none';
+    }
+
+    // ============================================================
+    //  KEY VALIDATION
+    // ============================================================
+    async function checkKeyAndLogout() {
+      const key = localStorage.getItem('yaarwin_key');
+      if (!key) {
+        forceLogout();
+        return false;
+      }
+      try {
+        const res = await fetch(`/api/check-key?key=${key}`);
+        const data = await res.json();
+        if (!data.valid) {
+          forceLogout();
+          return false;
+        }
+        return true;
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function startKeyValidation() {
+      if (window._keyCheckInterval) clearInterval(window._keyCheckInterval);
+      checkKeyAndLogout();
+      window._keyCheckInterval = setInterval(checkKeyAndLogout, 5000);
+    }
+
+    // ============================================================
+    //  LOGGING + TOAST
+    // ============================================================
+    let logEntries = [];
+    function addLog(msg, type='info', account='') {
+      const time = new Date().toLocaleTimeString();
+      logEntries.push({ time, msg, type, account });
+      renderLogs();
+    }
+    function renderLogs() {
+      logArea.innerHTML = '<div style="color:#888; font-size:11px;">— Logs —</div>';
+      const entries = logEntries.slice(-80);
+      entries.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        const cls = entry.type === 'success' ? 'success' : (entry.type === 'error' ? 'error' : 'info');
+        const accountLabel = entry.account ? `<span class="account">[${entry.account}]</span>` : '';
+        div.innerHTML = `<span class="time">[${entry.time}]</span> ${accountLabel} <span class="msg ${cls}">${entry.msg}</span>`;
+        logArea.appendChild(div);
+      });
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+    function showToast(msg, duration=2800) {
+      toastContainer.textContent = msg;
+      toastContainer.classList.add('show');
+      clearTimeout(toastContainer._hideTimer);
+      toastContainer._hideTimer = setTimeout(() => {
+        toastContainer.classList.remove('show');
+      }, duration);
+      let type = 'info';
+      if (msg.includes('✅') || msg.includes('Success')) type = 'success';
+      else if (msg.includes('❌') || msg.includes('Failed') || msg.includes('error')) type = 'error';
+      addLog(msg, type);
+    }
+
+    // ============================================================
+    //  CODE UTILS
+    // ============================================================
+    function extractCodes(text) {
+      const regex = /[A-Z0-9]{20,40}/g;
+      return text.match(regex) || [];
+    }
+    let currentCode = '';
+    let codeQueue = [];
+    function setDisplayCode(code) {
+      currentCode = code;
+      if (code) {
+        codeDisplay.textContent = code;
+        codeDisplay.classList.remove('invalid');
+        if (code.length < 20 || code.length > 40) {
+          codeDisplay.classList.add('invalid');
+        } else {
+          codeDisplay.classList.remove('invalid');
+        }
+      } else {
+        codeDisplay.textContent = 'Paste a code or use PASTE';
+        codeDisplay.classList.remove('invalid');
+      }
+    }
+
+    // ============================================================
+    //  YAARWIN FUNCTIONS (full)
+    // ============================================================
+    let accounts = [];
+    let groups = [];
+    let sessionTokens = {};
+    let isFiring = false;
+    let isAutoOn = false;
+    let autoTokenRefreshInterval = null;
+
+    function getHeaders() {
+      const key = localStorage.getItem('yaarwin_key');
+      return { 'Content-Type': 'application/json', 'X-Auth-Key': key };
+    }
+
+    async function callLogin(username, password) {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ username, pwd: password })
+      });
+      if (res.status === 401) { forceLogout(); return null; }
+      return await res.json();
+    }
+    async function callRedeem(token, code, accountUsername) {
+      const res = await fetch('/api/redeem', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ token, giftCode: code, accountUsername })
+      });
+      if (res.status === 401) { forceLogout(); return null; }
+      return await res.json();
+    }
+    async function fetchHistory() {
+      const res = await fetch('/api/history', { headers: getHeaders() });
+      if (res.status === 401) { forceLogout(); return null; }
+      return await res.json();
+    }
+    function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    async function loginWithRetry(username, password) {
+      const maxAttempts = parseInt(maxRetriesInput.value) || 3;
+      const baseDelay = parseInt(retryDelayInput.value) || 1000;
+      let lastError = null;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const result = await callLogin(username, password);
+          if (!result) return { success: false, msg: 'Key revoked' };
+          if (result.code === 0) {
+            return { success: true, token: result.data?.token, msg: result.msg };
+          } else {
+            lastError = result.msg || 'Login failed';
+            if (lastError.includes('account') || lastError.includes('not exist')) {
+              return { success: false, msg: lastError };
+            }
+          }
+        } catch (e) {
+          lastError = e.message;
+        }
+        if (attempt < maxAttempts) {
+          const wait = baseDelay * Math.pow(2, attempt - 1);
+          addLog(`⏳ Retry ${attempt}/${maxAttempts} for ${username} in ${wait}ms`, 'info', username);
+          await delay(wait);
+        }
+      }
+      return { success: false, msg: lastError || 'Max attempts reached' };
+    }
+
+    async function loginAll() {
+      if (accounts.length === 0) { showToast('No accounts'); return; }
+      showToast(`⏳ Logging in ${accounts.length} accounts...`);
+      let successCount = 0;
+      const failedAccounts = [];
+      const loginDelayMs = parseInt(delayBetweenAccountsInput.value) || 300;
+      for (const acc of accounts) {
+        const res = await loginWithRetry(acc.username, acc.password);
+        if (res && res.success && res.token) {
+          sessionTokens[acc.username] = res.token;
+          successCount++;
+          addLog(`✅ ${acc.username} logged in`, 'success', acc.username);
+        } else {
+          addLog(`❌ ${acc.username} login failed: ${res ? res.msg : 'Key revoked'}`, 'error', acc.username);
+          if (res) failedAccounts.push({ ...acc, lastError: res.msg });
+        }
+        await delay(loginDelayMs);
+      }
+      if (failedAccounts.length > 0 && parseInt(retryDelayInput.value) > 0) {
+        showToast(`⚠️ ${failedAccounts.length} failed. Retrying...`);
+        for (const fail of failedAccounts) {
+          let retrySuccess = false;
+          for (let retry = 1; retry <= 3; retry++) {
+            const wait = parseInt(retryDelayInput.value) * Math.pow(2, retry - 1);
+            addLog(`⏳ Retry ${retry}/3 for ${fail.username} in ${wait}ms`, 'info', fail.username);
+            await delay(wait);
+            const res = await loginWithRetry(fail.username, fail.password);
+            if (res && res.success && res.token) {
+              sessionTokens[fail.username] = res.token;
+              successCount++;
+              addLog(`✅ ${fail.username} logged in after retry`, 'success', fail.username);
+              retrySuccess = true;
+              break;
+            } else {
+              addLog(`❌ Retry ${retry} failed for ${fail.username}: ${res ? res.msg : 'Key revoked'}`, 'error', fail.username);
+            }
+          }
+          if (!retrySuccess) {
+            addLog(`❌ ${fail.username} could not log in after all retries`, 'error', fail.username);
+          }
+          await delay(loginDelayMs);
+        }
+      }
+      showToast(`✅ Login All: ${successCount}/${accounts.length} succeeded`);
+    }
+
+    function refreshAll() {
+      sessionTokens = {};
+      showToast('🔄 All tokens cleared');
+      addLog('All session tokens cleared', 'info');
+    }
+
+    async function fireCodeOnAllAccounts(code) {
+      if (isFiring) return;
+      if (!code || code.length < 20 || code.length > 40) {
+        showToast('❌ Invalid code');
+        return;
+      }
+      if (accounts.length === 0) {
+        showToast('❌ No accounts saved');
+        return;
+      }
+      isFiring = true;
+      fireBtn.classList.add('loading');
+      fireBtn.disabled = true;
+      let overallSuccess = false;
+      const stopErrors = ['expired', 'already used', 'redeem code error', 'red envelope has been received'];
+      const redeemDelayMs = parseInt(redeemDelayInput.value) || 200;
+      const stopOnError = stopOnErrorSelect.value === 'true';
+      for (const acc of accounts) {
+        let token = sessionTokens[acc.username];
+        if (!token) {
+          addLog(`🔑 Logging in ${acc.username}...`, 'info', acc.username);
+          const loginRes = await loginWithRetry(acc.username, acc.password);
+          if (loginRes && loginRes.success && loginRes.token) {
+            token = loginRes.token;
+            sessionTokens[acc.username] = token;
+          } else {
+            addLog(`❌ Login failed for ${acc.username}: ${loginRes ? loginRes.msg : 'Key revoked'}`, 'error', acc.username);
+            continue;
+          }
+        }
+        addLog(`🔥 Firing ${code} on ${acc.username}...`, 'info', acc.username);
+        try {
+          const redeemRes = await callRedeem(token, code, acc.username);
+          if (!redeemRes) break;
+          if (redeemRes.code === 0) {
+            const reward = redeemRes.data?.reward || 'Item';
+            addLog(`✅ Success! Reward: ${reward}`, 'success', acc.username);
+            overallSuccess = true;
+          } else {
+            const errMsg = redeemRes.msg || 'Unknown error';
+            const lower = errMsg.toLowerCase();
+            if (stopErrors.some(e => lower.includes(e))) {
+              addLog(`🛑 ${errMsg} – stopping and jumping to next account`, 'error', acc.username);
+              if (stopOnError) break;
+            } else {
+              addLog(`⚠️ ${errMsg} – moving to next account`, 'error', acc.username);
+            }
+          }
+        } catch (e) {
+          addLog(`⚠️ Network error on ${acc.username}: ${e.message} – retrying...`, 'error', acc.username);
+          try {
+            await delay(1000);
+            const retryRes = await callRedeem(token, code, acc.username);
+            if (!retryRes) break;
+            if (retryRes.code === 0) {
+              const reward = retryRes.data?.reward || 'Item';
+              addLog(`✅ Success! Reward: ${reward} (after retry)`, 'success', acc.username);
+              overallSuccess = true;
+            } else {
+              addLog(`❌ Retry failed: ${retryRes.msg}`, 'error', acc.username);
+            }
+          } catch(err) {
+            addLog(`❌ Retry network error: ${err.message}`, 'error', acc.username);
+          }
+        }
+        await delay(redeemDelayMs);
+      }
+      if (overallSuccess) {
+        showToast('✅ Code redeemed successfully on at least one account');
+      } else {
+        showToast('❌ All attempts failed or code invalid');
+      }
+      isFiring = false;
+      fireBtn.classList.remove('loading');
+      fireBtn.disabled = false;
+    }
+
+    async function fireCurrentCode() {
+      await fireCodeOnAllAccounts(currentCode);
+    }
+
+    function toggleAuto() {
+      isAutoOn = !isAutoOn;
+      if (isAutoOn) {
+        autoToggleBtn.textContent = 'AUTO: ON';
+        autoToggleBtn.className = 'btn btn-auto-on';
+        showToast('🤖 AUTO enabled – relogin every 20 minutes');
+        if (autoTokenRefreshInterval) clearInterval(autoTokenRefreshInterval);
+        autoTokenRefreshInterval = setInterval(() => {
+          if (accounts.length > 0) {
+            addLog('🔄 Auto relogin triggered (20 min timer)', 'info');
+            loginAll();
+          }
+        }, 1200000);
+      } else {
+        autoToggleBtn.textContent = 'AUTO: OFF';
+        autoToggleBtn.className = 'btn btn-auto-off';
+        showToast('🛑 AUTO disabled');
+        if (autoTokenRefreshInterval) {
+          clearInterval(autoTokenRefreshInterval);
+          autoTokenRefreshInterval = null;
+        }
+      }
+    }
+
+    function loadAccounts() {
+      const stored = localStorage.getItem('yaarwin_accounts');
+      if (stored) {
+        try { accounts = JSON.parse(stored); } catch(e) { accounts = []; }
+      }
+      const seen = new Set();
+      accounts = accounts.filter(acc => {
+        if (!acc || !acc.username || !acc.password) return false;
+        const key = acc.username.trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      accounts = accounts.map(a => ({
+        id: a.id || Date.now() + Math.random(),
+        username: a.username.trim(),
+        password: a.password.trim(),
+        nickname: (a.nickname && a.nickname.trim()) || a.username,
+        primary: a.primary === true
+      }));
+      if (accounts.length > 0 && !accounts.some(a => a.primary)) {
+        accounts[0].primary = true;
+      }
+      saveAccounts();
+      renderAccountLists();
+    }
+    function saveAccounts() {
+      localStorage.setItem('yaarwin_accounts', JSON.stringify(accounts));
+      renderAccountLists();
+      syncAccountsToServer();
+    }
+    function renderAccountLists() {
+      renderAccountList(accountList, accountCounter);
+    }
+    function renderAccountList(container, counter) {
+      container.innerHTML = '';
+      if (accounts.length === 0) {
+        container.innerHTML = '<div style="color:#aaa; padding:8px 0;">No accounts saved.</div>';
+        counter.textContent = '0 Accounts';
+        return;
+      }
+      accounts.forEach((acc) => {
+        const div = document.createElement('div');
+        div.className = 'account-item';
+        const primaryIcon = acc.primary ? '⭐ ' : '';
+        const displayName = acc.nickname || acc.username || '(no name)';
+        div.innerHTML = `
+          <div class="info">
+            <div class="name">${primaryIcon}${displayName}</div>
+            <div class="detail">${acc.username}</div>
+          </div>
+          <div class="actions">
+            <button class="primary-btn ${acc.primary?'active':''}" data-id="${acc.id}">${acc.primary?'✅ Primary':'Set Primary'}</button>
+            <button class="delete-btn" data-id="${acc.id}">🗑️</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      container.querySelectorAll('.primary-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          accounts.forEach(a => a.primary = (a.id === id));
+          saveAccounts();
+          showToast(`⭐ Primary set to ${accounts.find(a=>a.id===id).username}`);
+        });
+      });
+      container.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          if (confirm('Delete this account?')) {
+            const acc = accounts.find(a => a.id === id);
+            accounts = accounts.filter(a => a.id !== id);
+            if (acc && sessionTokens[acc.username]) delete sessionTokens[acc.username];
+            saveAccounts();
+            showToast('Account deleted');
+          }
+        });
+      });
+      counter.textContent = `${accounts.length} Accounts`;
+    }
+
+    function loadGroups() {
+      const stored = localStorage.getItem('yaarwin_groups');
+      if (stored) {
+        try { groups = JSON.parse(stored); } catch(e) { groups = []; }
+      }
+      groups = groups.filter(g => g && g.name && Array.isArray(g.numbers));
+      saveGroups();
+      renderGroupList();
+    }
+    function saveGroups() {
+      localStorage.setItem('yaarwin_groups', JSON.stringify(groups));
+      renderGroupList();
+    }
+    function renderGroupList() {
+      groupList.innerHTML = '';
+      if (groups.length === 0) {
+        groupList.innerHTML = '<div style="color:#aaa; padding:8px 0;">No groups created.</div>';
+        groupCounter.textContent = '0 Groups';
+        return;
+      }
+      groups.forEach((g) => {
+        const div = document.createElement('div');
+        div.className = 'group-item';
+        const count = g.numbers ? g.numbers.length : 0;
+        div.innerHTML = `
+          <div class="info">
+            <div class="name">${g.name}</div>
+            <div class="detail">${count} accounts</div>
+          </div>
+          <div class="actions">
+            <button class="load-btn" data-id="${g.id}">📥 Load</button>
+            <button class="delete-btn" data-id="${g.id}">🗑️</button>
+          </div>
+        `;
+        groupList.appendChild(div);
+      });
+      groupList.querySelectorAll('.load-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          const group = groups.find(g => g.id === id);
+          if (!group || !group.numbers || group.numbers.length === 0) {
+            showToast('Group is empty');
+            return;
+          }
+          if (!confirm(`⚠️ This will REPLACE all existing accounts with ${group.numbers.length} accounts from "${group.name}". Continue?`)) {
+            return;
+          }
+          accounts = [];
+          sessionTokens = {};
+          let added = 0;
+          const defaultPass = defaultPasswordInput.value || 'password123';
+          for (const entry of group.numbers) {
+            let username, password;
+            if (typeof entry === 'string') {
+              const parts = entry.split('|');
+              username = parts[0].trim();
+              password = parts[1] ? parts[1].trim() : defaultPass;
+            } else if (typeof entry === 'object' && entry.number) {
+              username = entry.number.trim();
+              password = entry.password ? entry.password.trim() : defaultPass;
+            } else {
+              continue;
+            }
+            if (username) {
+              accounts.push({
+                id: Date.now() + added,
+                username: username,
+                password: password,
+                nickname: group.name,
+                primary: false
+              });
+              added++;
+            }
+          }
+          if (accounts.length > 0) {
+            accounts[0].primary = true;
+          }
+          saveAccounts();
+          showToast(`✅ Loaded ${added} accounts from group "${group.name}"`);
+          addLog(`Loaded ${added} accounts from group "${group.name}" (replaced all)`, 'success');
+        });
+      });
+      groupList.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          if (confirm('Delete this group?')) {
+            groups = groups.filter(g => g.id !== id);
+            saveGroups();
+            showToast('Group deleted');
+          }
+        });
+      });
+      groupCounter.textContent = `${groups.length} Groups`;
+    }
+
+    let editingGroupId = null;
+    function openAccountModal() {
+      accountModalOverlay.classList.add('open');
+      groupFormArea.style.display = 'none';
+      editingGroupId = null;
+      loadGroups();
+    }
+    function closeAccountModal() {
+      accountModalOverlay.classList.remove('open');
+      groupFormArea.style.display = 'none';
+      groupNameInput.value = '';
+      groupNumbersInput.value = '';
+      editingGroupId = null;
+    }
+    function showGroupForm() {
+      groupFormArea.style.display = 'block';
+      groupNameInput.value = '';
+      groupNumbersInput.value = '';
+      editingGroupId = null;
+      saveGroupBtn.textContent = 'Save Group';
+      groupNameInput.focus();
+    }
+    function saveGroup() {
+      const name = groupNameInput.value.trim();
+      const numbersText = groupNumbersInput.value.trim();
+      if (!name) { showToast('Please enter a group name'); return; }
+      if (!numbersText) { showToast('Please enter at least one number'); return; }
+      const lines = numbersText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      if (lines.length === 0) { showToast('No valid entries'); return; }
+      const parsed = lines.map(line => {
+        const parts = line.split('|');
+        if (parts.length === 2) {
+          return { number: parts[0].trim(), password: parts[1].trim() };
+        } else {
+          return { number: parts[0].trim(), password: null };
+        }
+      });
+      const valid = parsed.filter(p => p.number);
+      if (valid.length === 0) { showToast('No valid numbers found'); return; }
+      if (editingGroupId !== null) {
+        const idx = groups.findIndex(g => g.id === editingGroupId);
+        if (idx !== -1) {
+          groups[idx].name = name;
+          groups[idx].numbers = valid;
+        }
+        editingGroupId = null;
+      } else {
+        groups.push({
+          id: Date.now(),
+          name: name,
+          numbers: valid
+        });
+      }
+      saveGroups();
+      showToast(`✅ Group "${name}" saved with ${valid.length} accounts`);
+      groupFormArea.style.display = 'none';
+      groupNameInput.value = '';
+      groupNumbersInput.value = '';
+      renderGroupList();
+    }
+
+    function openManageModal() {
+      modalOverlay.classList.add('open');
+      renderAccountLists();
+    }
+    function closeManageModal() {
+      modalOverlay.classList.remove('open');
+    }
+    function clearAllAccounts() {
+      if (confirm('⚠️ Delete ALL accounts? This cannot be undone.')) {
+        accounts = [];
+        sessionTokens = {};
+        saveAccounts();
+        showToast('All accounts cleared');
+        renderAccountLists();
+      }
+    }
+    function bulkImport() {
+      const text = bulkImportArea.value.trim();
+      if (!text) { showToast('Paste accounts first'); return; }
+      const lines = text.split('\n').filter(line => line.trim());
+      let added = 0;
+      for (const line of lines) {
+        const parts = line.split(/[|:]/);
+        if (parts.length >= 2) {
+          const username = parts[0].trim();
+          const password = parts[1].trim();
+          if (username && password && !accounts.some(a => a.username === username)) {
+            accounts.push({
+              id: Date.now() + added,
+              username,
+              password,
+              nickname: username,
+              primary: false
+            });
+            added++;
+          }
+        }
+      }
+      if (accounts.length > 0 && !accounts.some(a => a.primary)) {
+        accounts[0].primary = true;
+      }
+      saveAccounts();
+      showToast(`✅ Imported ${added} accounts`);
+      bulkImportArea.value = '';
+    }
+
+    async function openHistory() {
+      historyOverlay.classList.add('open');
+      try {
+        const data = await fetchHistory();
+        if (!data) return;
+        historyList.innerHTML = '';
+        if (data.length === 0) {
+          historyList.innerHTML = '<div style="color:#aaa;">No history yet.</div>';
+        } else {
+          data.slice().reverse().forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px; flex-wrap:wrap;';
+            const status = item.success ? '✅' : '❌';
+            const cls = item.success ? 'color:#69F0AE;' : 'color:#FF5252;';
+            div.innerHTML = `
+              <span>${status} ${item.code}</span>
+              <span>${item.account}</span>
+              <span style="${cls}">${item.success ? item.reward : item.error}</span>
+              <span style="color:#888;font-size:11px;">${new Date(item.time).toLocaleTimeString()}</span>
+            `;
+            historyList.appendChild(div);
+          });
+        }
+      } catch(e) {
+        historyList.innerHTML = '<div style="color:#FF5252;">Failed to load history</div>';
+      }
+    }
+    function closeHistory() {
+      historyOverlay.classList.remove('open');
+    }
+
+    async function syncAccountsToServer() {
+      const key = localStorage.getItem('yaarwin_key');
+      if (!key) return;
+      try {
+        await fetch('/api/save-accounts', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ key, accounts })
+        });
+      } catch(e) { /* ignore */ }
+    }
+
+    // ============================================================
+    //  SETTINGS FUNCTIONS
+    // ============================================================
+    function loadSettings() {
+      const stored = localStorage.getItem('yaarwin_settings');
+      if (stored) {
+        try {
+          const s = JSON.parse(stored);
+          loginDelayInput.value = s.loginDelay || 500;
+          retryDelayInput.value = s.retryDelay || 1000;
+          maxRetriesInput.value = s.maxRetries || 3;
+          delayBetweenAccountsInput.value = s.delayBetweenAccounts || 300;
+          redeemDelayInput.value = s.redeemDelay || 200;
+          stopOnErrorSelect.value = s.stopOnError || 'true';
+          defaultPasswordInput.value = s.defaultPassword || 'password123';
+        } catch(e) {}
+      }
+    }
+    function saveSettings() {
+      const settings = {
+        loginDelay: loginDelayInput.value,
+        retryDelay: retryDelayInput.value,
+        maxRetries: maxRetriesInput.value,
+        delayBetweenAccounts: delayBetweenAccountsInput.value,
+        redeemDelay: redeemDelayInput.value,
+        stopOnError: stopOnErrorSelect.value,
+        defaultPassword: defaultPasswordInput.value
+      };
+      localStorage.setItem('yaarwin_settings', JSON.stringify(settings));
+      showToast('✅ Settings saved');
+    }
+
+    function switchSettingsSection(section) {
+      settingsNavBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.section === section);
+      });
+      Object.keys(settingsSections).forEach(key => {
+        settingsSections[key].classList.toggle('active', key === section);
+      });
+      if (section === 'allocation') {
+        loadAllocations();
+      }
+    }
+    settingsNavBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchSettingsSection(btn.dataset.section);
+      });
+    });
+
+    // ============================================================
+    //  BOT ALLOCATION
+    // ============================================================
+    let allocations = {};
+    let channels = [];
+
+    // For allocation, we need channels. Since Telegram monitoring is "Coming Soon",
+    // we'll just show a placeholder.
+    async function loadAllocations() {
+      try {
+        const res = await fetch('/api/bot-allocations');
+        const data = await res.json();
+        allocations = data.allocations || {};
+        renderAllocationUI();
+      } catch(e) {
+        console.error('Failed to load allocations:', e);
+      }
+    }
+
+    // Load channels from server (or use empty if not available)
+    async function loadChannels() {
+      try {
+        const res = await fetch('/api/bot-channels');
+        const data = await res.json();
+        channels = data.channels || [];
+        renderAllocationUI();
+      } catch(e) {
+        console.error('Failed to load channels:', e);
+      }
+    }
+    loadChannels();
+
+    function renderAllocationUI() {
+      const container = document.getElementById('allocationList');
+      container.innerHTML = '';
+      if (channels.length === 0) {
+        container.innerHTML = '<div style="color:#888; padding:8px 0;">No channels added. Telegram monitoring is coming soon.</div>';
+        return;
+      }
+      channels.forEach(ch => {
+        const username = ch.username;
+        const alloc = allocations[username] || { start: 0, end: 0 };
+        const div = document.createElement('div');
+        div.className = 'setting-row';
+        div.innerHTML = `
+          <label style="min-width:100px;">@${username}</label>
+          <input type="number" id="alloc_start_${username}" value="${alloc.start || 0}" min="0" style="width:80px;" />
+          <span style="color:#888;">to</span>
+          <input type="number" id="alloc_end_${username}" value="${alloc.end || 0}" min="0" style="width:80px;" />
+          <span style="color:#888; font-size:12px;">(0‑based, inclusive)</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function saveAllocations() {
+      const newAlloc = {};
+      channels.forEach(ch => {
+        const username = ch.username;
+        const start = parseInt(document.getElementById(`alloc_start_${username}`).value) || 0;
+        const end = parseInt(document.getElementById(`alloc_end_${username}`).value) || 0;
+        newAlloc[username] = { start, end };
+      });
+      try {
+        const res = await fetch('/api/bot-allocations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ allocations: newAlloc })
+        });
+        const data = await res.json();
+        if (data.success) {
+          allocations = newAlloc;
+          allocationStatus.textContent = '✅ Allocations saved successfully!';
+          allocationStatus.style.color = '#69F0AE';
+        } else {
+          allocationStatus.textContent = '❌ Failed to save.';
+          allocationStatus.style.color = '#FF5252';
+        }
+      } catch(e) {
+        allocationStatus.textContent = '❌ Error: ' + e.message;
+        allocationStatus.style.color = '#FF5252';
+      }
+    }
+
+    saveAllocationBtn.addEventListener('click', saveAllocations);
+
+    // ============================================================
+    //  EVENT LISTENERS (Yaarwin)
+    // ============================================================
+    clearCodeBtn.addEventListener('click', () => { setDisplayCode(''); codeQueue = []; });
+    autoToggleBtn.addEventListener('click', toggleAuto);
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        const codes = extractCodes(text);
+        if (codes.length === 0) { showToast('No valid code found'); return; }
+        setDisplayCode(codes[0]);
+        codeQueue = codes.slice(1);
+        showToast(`📋 ${codes.length} codes found. Queued ${codeQueue.length}.`);
+        await fireCodeOnAllAccounts(codes[0]);
+      } catch(e) {
+        showToast('Cannot read clipboard. Grant permission.');
+      }
+    });
+    fireBtn.addEventListener('click', fireCurrentCode);
+    loginAllBtn.addEventListener('click', loginAll);
+    refreshAllBtn.addEventListener('click', refreshAll);
+    giftPageBtn.addEventListener('click', openHistory);
+    accountPageBtn.addEventListener('click', openAccountModal);
+    manageIdsBtn.addEventListener('click', openManageModal);
+    closeModalBtn.addEventListener('click', closeManageModal);
+    bulkImportBtn.addEventListener('click', bulkImport);
+    clearAllBtn.addEventListener('click', clearAllAccounts);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeManageModal(); });
+    closeAccountModalBtn.addEventListener('click', closeAccountModal);
+    addGroupBtn.addEventListener('click', showGroupForm);
+    saveGroupBtn.addEventListener('click', saveGroup);
+    cancelGroupBtn.addEventListener('click', () => {
+      groupFormArea.style.display = 'none';
+      groupNameInput.value = '';
+      groupNumbersInput.value = '';
+      editingGroupId = null;
+    });
+    accountModalOverlay.addEventListener('click', (e) => { if (e.target === accountModalOverlay) closeAccountModal(); });
+    closeHistoryBtn.addEventListener('click', closeHistory);
+    historyOverlay.addEventListener('click', (e) => { if (e.target === historyOverlay) closeHistory(); });
+
+    // Settings
+    function openSettingsModal() {
+      loadSettings();
+      settingsOverlay.classList.add('open');
+      switchSettingsSection('login');
+      loadAllocations();
+    }
+    function closeSettingsModal() {
+      settingsOverlay.classList.remove('open');
+    }
+    closeSettingsBtn.addEventListener('click', closeSettingsModal);
+    saveSettingsBtn.addEventListener('click', saveSettings);
+    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettingsModal(); });
+    hamburgerBtn.addEventListener('click', openSettingsModal);
+
+    // ============================================================
+    //  PARTICLES
+    // ============================================================
+    (function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i=0; i<50; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random()*4+2;
+        p.style.width = size+'px';
+        p.style.height = size+'px';
+        p.style.left = Math.random()*100+'%';
+        p.style.top = Math.random()*100+'%';
+        p.style.animationDelay = Math.random()*8+'s';
+        p.style.animationDuration = (Math.random()*6+6)+'s';
+        container.appendChild(p);
+      }
+    })();
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    loadAccounts();
+    loadGroups();
+    loadSettings();
+    setDisplayCode('');
+    if (localStorage.getItem('yaarwin_key')) {
+      startKeyValidation();
+    }
+    showToast('🚀 Auto Gift Code Claimer – Yaarwin Edition');
+    addLog('App started – Yaarwin only', 'info');
+
+  })();
+</script>
+</body>
+</html>
