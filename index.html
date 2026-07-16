@@ -25,11 +25,55 @@
 
     .game-tab { background:linear-gradient(135deg,#E53935,#c62828); border-radius:14px; padding:12px 0; text-align:center; font-weight:800; font-size:clamp(16px,2.4vw,20px); letter-spacing:2px; color:#fff; text-shadow:0 2px 8px rgba(229,57,53,0.4); flex-shrink:0; margin-bottom:12px; box-shadow:0 4px 20px rgba(229,57,53,0.25); }
 
-    .code-area { background:rgba(0,0,0,0.4); border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; border:1px solid rgba(255,215,0,0.15); min-height:64px; margin-bottom:12px; }
-    .code-text { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(16px,2.2vw,22px); color:#FFD700; word-break:break-all; max-height:80px; overflow-y:auto; flex:1; padding-right:12px; text-shadow:0 0 10px rgba(255,215,0,0.1); }
-    .code-text.invalid { text-decoration:underline; text-decoration-color:#ff5252; }
-    .clear-btn { width:36px; height:36px; background:rgba(229,57,53,0.8); border:none; border-radius:10px; color:#fff; font-size:18px; font-weight:700; cursor:pointer; transition:0.2s; flex-shrink:0; }
-    .clear-btn:hover { background:#E53935; transform:scale(1.05); }
+    /* ── CODE INPUT SECTION (replaces old .code-area) ── */
+    .code-input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+      margin-bottom: 12px;
+    }
+    .code-input-wrapper textarea {
+      flex: 1;
+      background: rgba(0,0,0,0.4);
+      color: #FFD700;
+      border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(16px, 2.2vw, 22px);
+      font-weight: 700;
+      resize: vertical;
+      min-height: 64px;
+      max-height: 120px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .code-input-wrapper textarea:focus {
+      border-color: #E53935;
+      box-shadow: 0 0 0 3px rgba(229,57,53,0.2);
+    }
+    .code-input-wrapper .paste-btn {
+      background: #424242;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 0 20px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .code-input-wrapper .paste-btn:hover {
+      background: #616161;
+      transform: scale(0.97);
+    }
+    .code-input-wrapper .paste-btn:active {
+      transform: scale(0.93);
+    }
 
     .row { display:flex; gap:8px; flex-shrink:0; margin-bottom:10px; flex-wrap:wrap; }
     .btn { flex:1; padding:10px 0; border:none; border-radius:12px; font-family:'Inter',sans-serif; font-weight:700; font-size:clamp(12px,1.6vw,15px); cursor:pointer; transition:all 0.15s ease; text-align:center; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.05); min-width:60px; }
@@ -60,7 +104,7 @@
     .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.9); backdrop-filter:blur(8px); padding:12px 24px; border-radius:14px; color:#fff; font-size:15px; font-weight:500; z-index:9999; opacity:0; transition:opacity 0.3s; pointer-events:none; border:1px solid rgba(255,255,255,0.1); max-width:90%; text-align:center; }
     .toast.show { opacity:1; }
 
-    /* ── MODALS ── */
+    /* ── MODALS ── (unchanged) ── */
     .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:none; justify-content:center; align-items:center; z-index:10000; }
     .modal-overlay.open { display:flex; }
     .modal { background:#1e1e32; border-radius:24px; padding:24px; width:92%; max-width:520px; max-height:80vh; overflow-y:auto; border:1px solid rgba(255,255,255,0.06); box-shadow:0 20px 60px rgba(0,0,0,0.8); color:#fff; }
@@ -145,14 +189,15 @@
 
     <div class="game-tab">YAARWIN</div>
 
-    <div class="code-area">
-      <div class="code-text" id="codeDisplay">Paste a code or use PASTE</div>
-      <button class="clear-btn" id="clearCodeBtn">✕</button>
+    <!-- ─── NEW CODE INPUT WITH PASTE BUTTON ─── -->
+    <div class="code-input-wrapper">
+      <textarea id="codeInput" rows="2" placeholder="Paste gift code here..."></textarea>
+      <button class="paste-btn" id="pasteBtn">📋 Paste</button>
     </div>
 
     <div class="row">
       <button class="btn btn-auto-off" id="autoToggleBtn">AUTO: OFF</button>
-      <button class="btn btn-paste" id="pasteBtn">PASTE</button>
+      <button class="btn btn-paste" id="pasteBtnDuplicate">PASTE</button> <!-- kept for compatibility -->
       <button class="btn btn-fire" id="fireBtn">Fire 🔥</button>
     </div>
 
@@ -281,13 +326,14 @@
       'use strict';
 
       // ─── DOM REFS ───
-      const codeDisplay = document.getElementById('codeDisplay');
-      const clearCodeBtn = document.getElementById('clearCodeBtn');
+      const codeInput = document.getElementById('codeInput');
+      const pasteBtn = document.getElementById('pasteBtn');
+      const pasteBtnDuplicate = document.getElementById('pasteBtnDuplicate');
+      const clearCodeBtn = document.getElementById('clearCodeBtn'); // optional, not used
       const toastContainer = document.getElementById('toastContainer');
       const logArea = document.getElementById('logArea');
       const timerDisplay = document.getElementById('timerDisplay');
       const autoToggleBtn = document.getElementById('autoToggleBtn');
-      const pasteBtn = document.getElementById('pasteBtn');
       const fireBtn = document.getElementById('fireBtn');
       const loginAllBtn = document.getElementById('loginAllBtn');
       const refreshAllBtn = document.getElementById('refreshAllBtn');
@@ -524,18 +570,8 @@
         return text.match(regex) || [];
       }
 
-      function setDisplayCode(code) {
-        currentCode = code;
-        if (code) {
-          codeDisplay.textContent = code;
-          codeDisplay.classList.remove('invalid');
-          if (code.length < 20 || code.length > 40) {
-            codeDisplay.classList.add('invalid');
-          }
-        } else {
-          codeDisplay.textContent = 'Paste a code or use PASTE';
-          codeDisplay.classList.remove('invalid');
-        }
+      function getCurrentCode() {
+        return codeInput.value.trim();
       }
 
       // ─── ACCOUNT STORAGE ───
@@ -669,7 +705,7 @@
         });
       }
 
-      // ─── REDEEM LOGIC (IMPROVED) ───
+      // ─── REDEEM LOGIC (unchanged) ───
       async function redeemCode(code) {
         if (!code || code.length < 20) {
           showToast('❌ Invalid code (min 20 characters)', 'error');
@@ -753,7 +789,7 @@
         fireBtn.textContent = 'Fire 🔥';
       }
 
-      // ─── LOGIN ALL (BULK LOGIN) ───
+      // ─── LOGIN ALL ───
       async function loginAllAccounts() {
         if (accounts.length === 0) {
           showToast('❌ No accounts to login', 'error');
@@ -807,11 +843,11 @@
           autoToggleBtn.className = 'btn btn-auto-on';
           showToast('🔄 Auto mode ENABLED');
           addLog('🔄 Auto mode enabled', 'info');
-          // Start auto-checking for codes
           if (autoInterval) clearInterval(autoInterval);
           autoInterval = setInterval(() => {
-            if (currentCode && currentCode.length >= 20 && !isProcessing) {
-              redeemCode(currentCode);
+            const code = getCurrentCode();
+            if (code && code.length >= 20 && !isProcessing) {
+              redeemCode(code);
             }
           }, 5000);
         } else {
@@ -826,23 +862,24 @@
         }
       }
 
-      // ─── PASTE ───
+      // ─── PASTE FUNCTION ───
       async function pasteFromClipboard() {
         try {
           const text = await navigator.clipboard.readText();
+          // Extract first code if any, otherwise paste entire text
           const codes = extractCodes(text);
           if (codes.length > 0) {
-            setDisplayCode(codes[0]);
+            codeInput.value = codes[0];
             showToast('📋 Code pasted: ' + codes[0]);
             addLog('📋 Pasted code: ' + codes[0], 'info');
           } else {
-            // If no code pattern, just show the raw text (truncated)
-            const trimmed = text.trim().slice(0, 40);
-            setDisplayCode(trimmed);
+            // Paste raw text (truncate if too long)
+            const trimmed = text.trim().slice(0, 100);
+            codeInput.value = trimmed;
             showToast('📋 Pasted text (no valid code found)');
           }
         } catch (e) {
-          showToast('❌ Unable to paste. Please use Ctrl+V or long-press.', 'error');
+          showToast('❌ Unable to paste. Please use long-press or Ctrl+V.', 'error');
         }
       }
 
@@ -859,13 +896,15 @@
       });
 
       // ─── EVENT BINDINGS ───
-      clearCodeBtn.addEventListener('click', () => setDisplayCode(''));
-
+      // Paste button
       pasteBtn.addEventListener('click', pasteFromClipboard);
+      if (pasteBtnDuplicate) pasteBtnDuplicate.addEventListener('click', pasteFromClipboard);
 
+      // Fire button
       fireBtn.addEventListener('click', () => {
-        if (currentCode && currentCode.length >= 20) {
-          redeemCode(currentCode);
+        const code = getCurrentCode();
+        if (code && code.length >= 20) {
+          redeemCode(code);
         } else {
           showToast('❌ Please paste a valid code first (20-40 characters)', 'error');
         }
@@ -935,7 +974,6 @@
               count++;
             }
           } else if (line.trim()) {
-            // If no pipe, use default password
             const phone = line.trim();
             if (phone) {
               accounts.push({ phone, password: defaultPasswordInput.value || 'password123' });
@@ -1015,16 +1053,13 @@
       loadSettings();
       renderAccounts();
       renderGroups();
-      setDisplayCode('');
 
       // ─── KEYBOARD SHORTCUTS ───
       document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'v') {
-          // Let default paste work, but we'll also detect via paste event
-        }
         if (e.key === 'Enter' && e.target === document.body) {
-          if (currentCode && currentCode.length >= 20 && !isProcessing) {
-            redeemCode(currentCode);
+          const code = getCurrentCode();
+          if (code && code.length >= 20 && !isProcessing) {
+            redeemCode(code);
           }
         }
       });
@@ -1032,10 +1067,11 @@
       // ─── PASTE EVENT DETECTION ───
       document.addEventListener('paste', (e) => {
         const text = e.clipboardData?.getData('text');
-        if (text) {
+        if (text && document.activeElement === codeInput) {
+          // Let default paste work; we also capture for auto‑extract
           const codes = extractCodes(text);
           if (codes.length > 0) {
-            setDisplayCode(codes[0]);
+            codeInput.value = codes[0];
             showToast('📋 Code pasted: ' + codes[0]);
             addLog('📋 Pasted code: ' + codes[0], 'info');
           }
