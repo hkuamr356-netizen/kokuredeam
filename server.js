@@ -1,6 +1,7 @@
 /**
- * Yarwin Redeem Pro - Server (v4.0) with integrated Telegram bot
- * Features: Yaarwin APIs, key‑based login, bot endpoints, allocation, admin dashboard with key generation.
+ * Yarwin Redeem Pro - Server (v4.1) with integrated Telegram bot
+ * Features: Yaarwin APIs, key‑based login, bot endpoints, allocation,
+ *           admin dashboard with key generation, PARALLEL batch login.
  */
 
 const express = require('express');
@@ -256,13 +257,21 @@ app.post('/api/login', validateKey, async (req, res) => {
   }
 });
 
+// ----- IMPROVED: Parallel batch login with concurrency control -----
 app.post('/api/login/batch', validateKey, async (req, res) => {
   const { accounts } = req.body;
   if (!accounts || !Array.isArray(accounts)) {
     return res.status(400).json({ code: -1, msg: 'Missing accounts array' });
   }
+
+  // Optional: limit concurrency to avoid rate limits (set to 0 for unlimited)
+  const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY) || 10; // default 10 concurrent
+
   const results = [];
-  for (const acc of accounts) {
+  const queue = [...accounts];
+  const active = [];
+
+  const processAccount = async (acc) => {
     try {
       const loginRes = await fetch(`${req.protocol}://${req.get('host')}/api/login`, {
         method: 'POST',
@@ -270,16 +279,40 @@ app.post('/api/login/batch', validateKey, async (req, res) => {
         body: JSON.stringify({ username: acc.username, pwd: acc.pwd })
       });
       const data = await loginRes.json();
-      results.push({
+      return {
         username: acc.username,
         success: data.code === 0,
         token: data.data?.token || null,
         msg: data.msg || (data.code === 0 ? 'OK' : 'Login failed')
-      });
+      };
     } catch(e) {
-      results.push({ username: acc.username, success: false, msg: e.message });
+      return { username: acc.username, success: false, msg: e.message };
     }
+  };
+
+  // If concurrency is 0 or accounts length <= concurrency, just use Promise.all
+  if (CONCURRENCY === 0 || accounts.length <= CONCURRENCY) {
+    const all = await Promise.all(accounts.map(acc => processAccount(acc)));
+    return res.json(all);
   }
+
+  // Otherwise, run with limited concurrency
+  while (queue.length > 0 || active.length > 0) {
+    // Fill active up to concurrency limit
+    while (active.length < CONCURRENCY && queue.length > 0) {
+      const acc = queue.shift();
+      const promise = processAccount(acc).then(result => {
+        results.push(result);
+        // Remove from active
+        const idx = active.indexOf(promise);
+        if (idx !== -1) active.splice(idx, 1);
+      });
+      active.push(promise);
+    }
+    // Wait for at least one to finish
+    await Promise.race(active);
+  }
+
   res.json(results);
 });
 
@@ -592,7 +625,6 @@ const server = app.listen(PORT, () => {
 // Start the Telegram bot inside the same process
 try {
   const { startBot } = require('./telegram-bot.js');
-  // Use PUBLIC_URL if set, otherwise fallback to localhost
   const publicUrl = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
   startBot(publicUrl);
   console.log('✅ Telegram bot started successfully.');
