@@ -19,7 +19,7 @@
     .timer-display { font-family:'JetBrains Mono',monospace; font-size:clamp(14px,1.8vw,20px); color:#FFD700; background:rgba(0,0,0,0.4); padding:4px 12px; border-radius:10px; border:1px solid rgba(255,215,0,0.2); }
     .game-tab { background:linear-gradient(135deg,#E53935,#c62828); border-radius:14px; padding:12px 0; text-align:center; font-weight:800; font-size:clamp(16px,2.4vw,20px); letter-spacing:2px; color:#fff; text-shadow:0 2px 8px rgba(229,57,53,0.4); flex-shrink:0; margin-bottom:12px; box-shadow:0 4px 20px rgba(229,57,53,0.25); }
     .code-area { background:rgba(0,0,0,0.4); border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; border:1px solid rgba(255,215,0,0.15); min-height:64px; margin-bottom:12px; }
-    .code-text { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(16px,2.2vw,22px); color:#FFD700; word-break:break-all; max-height:80px; overflow-y:auto; flex:1; padding-right:12px; text-shadow:0 0 10px rgba(255,215,0,0.1); }
+    .code-text { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(16px,2.2vw,22px); color:#FFD700; word-break:break-all; max-height:80px; overflow-y:auto; flex:1; padding-right:12px; text-shadow:0 0 10px rgba(255,215,0,0.1); cursor:pointer; user-select:none; }
     .code-text.invalid { text-decoration:underline; text-decoration-color:#ff5252; }
     .clear-btn { width:36px; height:36px; background:rgba(229,57,53,0.8); border:none; border-radius:10px; color:#fff; font-size:18px; font-weight:700; cursor:pointer; transition:0.2s; flex-shrink:0; }
     .clear-btn:hover { background:#E53935; transform:scale(1.05); }
@@ -544,7 +544,7 @@
     let isAutoOn = false;
     let autoTokenRefreshInterval = null;
 
-    // ---- FIXED: getHeaders() sends X-Auth-Key ----
+    // ---- getHeaders() sends X-Auth-Key ----
     function getHeaders() {
       const key = localStorage.getItem('yaarwin_key');
       return { 
@@ -581,7 +581,7 @@
 
     function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-    // ---- FIXED: loginWithRetry uses correct fields and response check ----
+    // ---- loginWithRetry uses correct fields and response check ----
     async function loginWithRetry(username, password) {
       const maxAttempts = parseInt(maxRetriesInput.value) || 3;
       const baseDelay = parseInt(retryDelayInput.value) || 1000;
@@ -590,7 +590,6 @@
         try {
           const result = await callLogin(username, password);
           if (!result) return { success: false, msg: 'Key revoked' };
-          // Server returns { code: 0, data: { token } } on success
           if (result.code === 0) {
             return { success: true, token: result.data?.token, msg: result.msg };
           } else {
@@ -611,7 +610,7 @@
       return { success: false, msg: lastError || 'Max attempts reached' };
     }
 
-    // ---- FIXED: loginAll uses correct login logic ----
+    // ---- loginAll uses correct login logic ----
     async function loginAll() {
       if (accounts.length === 0) { showToast('No accounts'); return; }
       showToast(`⏳ Logging in ${accounts.length} accounts...`);
@@ -664,7 +663,7 @@
       addLog('All session tokens cleared', 'info');
     }
 
-    // ---- FIXED: fireCodeOnAllAccounts uses correct redeem call ----
+    // ---- fireCodeOnAllAccounts uses correct redeem call ----
     async function fireCodeOnAllAccounts(code) {
       if (isFiring) return;
       if (!code || code.length < 20 || code.length > 40) {
@@ -1229,23 +1228,63 @@
     saveAllocationBtn.addEventListener('click', saveAllocations);
 
     // ============================================================
-    //  EVENT LISTENERS (Yaarwin)
+    //  PASTE LOGIC (shared between button and long-press)
     // ============================================================
-    clearCodeBtn.addEventListener('click', () => { setDisplayCode(''); codeQueue = []; });
-    autoToggleBtn.addEventListener('click', toggleAuto);
-    pasteBtn.addEventListener('click', async () => {
+    async function handlePaste() {
       try {
         const text = await navigator.clipboard.readText();
         const codes = extractCodes(text);
-        if (codes.length === 0) { showToast('No valid code found'); return; }
+        if (codes.length === 0) {
+          showToast('No valid code found in clipboard');
+          return;
+        }
         setDisplayCode(codes[0]);
         codeQueue = codes.slice(1);
         showToast(`📋 ${codes.length} codes found. Queued ${codeQueue.length}.`);
         await fireCodeOnAllAccounts(codes[0]);
       } catch(e) {
-        showToast('Cannot read clipboard. Grant permission.');
+        showToast('Cannot read clipboard. Grant permission or use long-press.');
+      }
+    }
+
+    // ============================================================
+    //  EVENT LISTENERS (Yaarwin)
+    // ============================================================
+    clearCodeBtn.addEventListener('click', () => { setDisplayCode(''); codeQueue = []; });
+    autoToggleBtn.addEventListener('click', toggleAuto);
+
+    // Paste button triggers the same handler
+    pasteBtn.addEventListener('click', handlePaste);
+
+    // ---- Long-press on code display to paste ----
+    let longPressTimer = null;
+    codeDisplay.addEventListener('touchstart', (e) => {
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        // Trigger paste on long press
+        handlePaste();
+        // Vibrate if supported (optional)
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 500); // 500ms long press
+    });
+    codeDisplay.addEventListener('touchend', () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
       }
     });
+    codeDisplay.addEventListener('touchmove', () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    });
+    // Also support right-click/contextmenu for desktop (optional)
+    codeDisplay.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      handlePaste();
+    });
+
     fireBtn.addEventListener('click', fireCurrentCode);
     loginAllBtn.addEventListener('click', loginAll);
     refreshAllBtn.addEventListener('click', refreshAll);
